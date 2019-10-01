@@ -1,0 +1,12 @@
+Classifying using only x1 and x2:
+  Correctly classified 5 instances of w1
+  Correctly classified 7 instances of w2
+  Training error: 40.0 %
+  Bhattacharyya bound: P(error) <= 0.5269241851254568
+
+Classifying using x1, x2 and x3:
+  Correctly classified 7 instances of w1
+  Correctly classified 7 instances of w2
+  Training error: 30.0 %
+  Bhattacharyya bound: P(error) <= 0.5415651873832302
+
