@@ -1,6 +1,8 @@
-# COMP 473 - F19 ASSIGNMENT 1
+# COMP 473 - Fall 2019
 
-## How to run
+## Assignment 1
+
+### How to run
 
 1. Install requirements: 
 ```
@@ -16,3 +18,10 @@ To output the results to a file, run:
 path/to/python3 classifier.py > results.txt
 ```
 
+## Assignment 2
+
+### How to run
+1. Same steps as for assignment 1, but instead run:
+```
+path/to/python3 lda.py
+```

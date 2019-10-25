@@ -1,5 +1,6 @@
 import numpy as np
 import matplotlib.pyplot as plt
+import matplotlib.cm as colormap
 from mpl_toolkits import mplot3d
 
 CLASS_2_SAMPLES = np.array([
@@ -84,8 +85,68 @@ def lda():
             v.append(W * proj)
         vectors.append(v)
 
-    plot(CLASS_SAMPLES, W, np.array(vectors))
+    # Fit each distribution with a univariate Gaussian
+    means, sigmas = fit_to_gaussian(class_projections)
+
+    # Find the decision boundary
+    decision_boundary = find_decision_boundary_gaussian(means, sigmas)
+
+    # Transform decision boundary onto subspace
+    decision_boundary_w = np.array(decision_boundary).dot(W).T
+
+    # Calculate training error
+    training_error = calculate_training_error(decision_boundary, class_projections[0], class_projections[1])
+    print('Training error with optimal W: {}%'.format(round(training_error * 100, 2)))
+
+    # Transform onto suboptimal subspace
+    suboptimal_W = np.array([1, 2, -1.5]).T
+    suboptimal_class_projections = []
+    for class_sample in CLASS_SAMPLES:
+        suboptimal_class_projections.append((class_sample.dot(suboptimal_W.tolist())))
+
+    # Fit each distribution with a univariate Gaussian
+    means, sigmas = fit_to_gaussian(class_projections)
+
+    # Find the decision boundary
+    suboptimal_decision_boundary = find_decision_boundary_gaussian(means, sigmas)
+
+    # Transform decision boundary onto subspace
+    suboptimal_decision_boundary_w = np.array(suboptimal_decision_boundary).dot(W).T
+
+    # Calculate training error
+    training_error = calculate_training_error(suboptimal_decision_boundary, suboptimal_class_projections[0], suboptimal_class_projections[1])
+    print('Training error with suboptimal W: {}%'.format(round(training_error * 100, 2)))
     
+    plot(CLASS_SAMPLES, W, np.array(vectors), decision_boundary_w)
+    
+
+def fit_to_gaussian(class_projections):
+    means = calculate_mean_vectors([np.array(c) for c in class_projections])
+    sigmas = [np.std(c, axis=0) for c in class_projections]
+    return means, sigmas
+    
+def find_decision_boundary_gaussian(means, sigmas):
+    mean1, mean2 = means[0], means[1]
+    sigma1, sigma2 = sigmas[0], sigmas[1]
+
+    a = 1 / (2 * sigma1**2) - 1 / ( 2 * sigma2**2)
+    b = mean2 / (sigma2**2) - mean1 / (sigma1**2)
+    c = mean1**2 / (2 * sigma1**2) - mean2**2 / (2 * sigma2**2) - np.log(sigma2 / sigma1)
+
+    return max(np.roots([a.item(), b.item(), c.item()]), key=lambda v: abs(v))
+
+def calculate_training_error(decision_boundary, w1_projections, w2_projections):
+    total = len(w1_projections) + len(w2_projections)
+    incorrect_classifications = 0
+    for projection in w1_projections:
+        if projection > decision_boundary:
+            incorrect_classifications += 1
+
+    for projection in w2_projections:
+        if projection < decision_boundary:
+            incorrect_classifications += 1
+
+    return incorrect_classifications / total
 
 def calculate_mean_vectors(class_samples):
     return [np.mean(sample, axis=0) for sample in class_samples]
@@ -122,13 +183,18 @@ def get_total_mean_all_samples(class_samples):
 
     return np.mean(all_samples, axis=0)
 
-def plot(class_samples, W, class_projections):
+def plot(class_samples, W, class_projections, decision_boundary):
     figure = plt.figure(figsize=(8, 6))
     axis = figure.add_subplot(111, projection='3d')
 
     axis.quiver(0, 0, 0, *W, color='black', arrow_length_ratio=0.03)
-    for cp in class_projections:
-        axis.scatter(cp[:,0], cp[:,1], cp[:,2])
+
+    colors = colormap.rainbow(np.linspace(0, 1, len(class_projections)))
+    for i, cp in enumerate(class_projections):
+        axis.scatter(cp[:,0], cp[:,1], cp[:,2], c=colors[i])
+
+    axis.scatter(decision_boundary[:,0], decision_boundary[:,1], decision_boundary[:,2], color='green', s=50)
+    
     plt.show()
 
 np.set_printoptions(suppress=True)
